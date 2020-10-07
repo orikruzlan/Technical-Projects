@@ -1,0 +1,164 @@
+<html>
+
+<canvas id="gameCanvas" width="800" height="600"> </canvas>
+
+<script>
+var canvas;
+var canvasContext;
+var win = false;
+var difficulty = 8;
+var scoreLeft = 0;
+var scoreRight = 0;
+var ballX = 400;
+var ballSpeedX = 8;
+var ballY = 300;
+var ballSpeedY = 4;
+var leftPaddleY = 150;
+var rightPaddleY = 300;
+const paddleHeight = 100;
+const paddleWidth = 10;
+const winScore = 2;
+
+
+
+
+//move the mouse as input
+function CalculateMousePos(evt) {
+	var rect = canvas.getBoundingClientRect();
+	var root = document.documentElement;
+	var mouseX = evt.clientX - rect.left - root.scrollLeft;
+	var mouseY = evt.clientY - rect.top - root.scrollTop - paddleHeight/2;
+	return {
+		x:mouseX,
+		y:mouseY
+	};
+}
+
+//mouse click input
+function mouseClick(evt) {
+	if (win) {
+		win = false;
+		scoreLeft = 0;
+		scoreRight= 0;
+	}
+}
+
+// main function
+window.onload = function () {
+	canvas = document.getElementById('gameCanvas');
+	canvasContext = canvas.getContext('2d');
+	var fps = 30;
+	setInterval(function() {
+				draw();
+				move();
+			},1000/fps);
+//mouse control to user
+	canvas.addEventListener('mousemove',function(evt) {
+		var mousePos = CalculateMousePos(evt);
+//which paddle to control
+		leftPaddleY = mousePos.y;
+	});
+
+//restart game
+	canvas.addEventListener('mousedown', mouseClick);
+
+}
+
+
+function missShot() {
+	if (scoreLeft == winScore || scoreRight == winScore) {
+		win = true;
+		ballX = canvas.width/2
+		ballY = canvas.height/2
+		return;
+	}
+	ballSpeedX = - ballSpeedX;
+	ballX = canvas.width/2
+	ballY = canvas.height/2
+}
+
+
+function aiMove () {
+	var paddleCenter = rightPaddleY + paddleHeight/2
+	if(paddleCenter < ballY - 30) {
+		rightPaddleY = rightPaddleY + difficulty;
+	} else if (paddleCenter > ballY + 30)
+		{
+		rightPaddleY = rightPaddleY - difficulty;
+	}
+}
+
+
+function draw() {
+//background
+	canvasContext.fillStyle = 'black';
+	canvasContext.fillRect(0,0,canvas.width,canvas.height);
+//if game over show black screen
+	if (win) {
+		canvasContext.fillStyle = 'white';
+		if (scoreLeft == winScore) {
+			canvasContext.fillText ("PLAYER 1 WON!", 350, 100);
+		} else {
+		        canvasContext.fillText ("PLAYER 2 WON!", 350, 100);
+		}
+		canvasContext.fillText ("GAME OVER", 380, 450);
+	}
+
+//leftpaddle
+	canvasContext.fillStyle = 'white';
+	canvasContext.fillRect(0,leftPaddleY,paddleWidth,paddleHeight);
+//rightpaddle
+	canvasContext.fillStyle = 'white';
+	canvasContext.fillRect(canvas.width - paddleWidth,rightPaddleY,paddleWidth,paddleHeight);
+//ball
+	canvasContext.fillStyle = 'white';
+	canvasContext.beginPath();
+	canvasContext.arc(ballX,ballY,10,0,Math.PI*2,true);
+	canvasContext.fill();
+//scoreboard
+	canvasContext.fillText(scoreLeft, 100, 100);
+	canvasContext.fillText(scoreRight, canvas.width - 100, 100);
+}
+
+function move() {
+	if (win) {
+	return
+}
+	aiMove();
+	ballX = ballX + ballSpeedX;
+	ballY = ballY + ballSpeedY;
+	if(ballX > canvas.width - paddleWidth) {
+		if (ballY < rightPaddleY || ballY > rightPaddleY+paddleHeight) {
+			scoreLeft++;
+			missShot();
+			}
+		else {
+			ballSpeedX = - ballSpeedX;
+			var hitPos = ballY - (rightPaddleY + paddleHeight/2);
+			ballSpeedY = hitPos * 0.30;
+ 		}
+
+}
+	if(ballX < 0 + paddleWidth) {
+		if (ballY < leftPaddleY || ballY > leftPaddleY+paddleHeight) {
+			scoreRight++;
+			missShot();
+			}
+		else {
+			ballSpeedX = - ballSpeedX;
+			var hitPos = ballY - (leftPaddleY + paddleHeight/2);
+			ballSpeedY = hitPos * 0.30;
+ 		}
+}
+	if(ballY > canvas.height) {
+		ballSpeedY = - ballSpeedY;
+		}
+	if(ballY < 0) {
+		ballSpeedY = - ballSpeedY;
+		}
+
+}
+
+
+</script>
+</html>
